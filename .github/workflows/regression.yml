@@ -1,0 +1,87 @@
+name: AES regression
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "Run the full 10,000-vector regression (slow)"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "0 3 * * 0"
+
+jobs:
+  quick:
+    name: quick regression (unit + KAT + random subset + equivalence + coverage)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog yosys
+          pip install pycryptodome
+      - name: Run quick regression
+        run: bash regress.sh quick
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-logs-quick
+          path: logs/
+
+  full:
+    name: full regression (10,000 random vectors per architecture)
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.full)
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog yosys
+          pip install pycryptodome
+      - name: Run full regression
+        run: bash regress.sh full
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-logs-full
+          path: logs/
+
+  synth:
+    name: yosys synthesis results
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog yosys
+          pip install pycryptodome
+      - name: Cycle counts (for the results table)
+        run: bash regress.sh perf
+      - name: Synthesize
+        run: bash scripts/run_synth.sh
+      - name: Show table
+        run: cat logs/results_table.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthesis-logs
+          path: logs/

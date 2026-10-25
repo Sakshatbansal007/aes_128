@@ -1,0 +1,3 @@
+Pipelined core: 10004 blocks (4 FIPS + 10000 random), 0 mismatches
+ALL PIPE TESTS PASSED
+tb/tb_pipe.v:82: $finish called at 155250000 (1ps)

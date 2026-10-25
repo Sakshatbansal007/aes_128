@@ -1,0 +1,3 @@
+Random regression: 10000 tests (4975 enc, 5025 dec), 0 mismatches
+ALL RANDOM TESTS PASSED
+tb/tb_aes_random.v:42: $finish called at 2400030000 (1ps)

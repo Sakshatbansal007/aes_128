@@ -1,0 +1,6 @@
+# simulation outputs / logs - regenerate with regress.sh
+sim/*.vvp
+sim/*.vcd
+logs/
+__pycache__/
+*.pyc

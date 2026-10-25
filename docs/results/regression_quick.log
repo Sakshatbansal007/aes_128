@@ -1,0 +1,53 @@
+== generating vectors (python golden model)
+aes_ref.py self-check OK (FIPS-197 + 500 random vs pycryptodome)
+wrote vectors/unit_*.txt
+wrote 10000 vectors to vectors/random_grouped.txt
+SP 800-38A CBC/CTR vectors confirmed against pycryptodome
+wrote 678 blocks (150 messages) to vectors/modes.txt
+== unit tests
+  [PASS] unit_sbox  (0s)
+  [PASS] unit_shift_rows  (0s)
+  [PASS] unit_mix_columns  (1s)
+  [PASS] unit_key_expand  (1s)
+== known-answer tests (FIPS-197, SP 800-38A)
+  [PASS] nist_iterative  (0s)
+  [PASS] nist_compact  (0s)
+  [PASS] modes_nist  (1s)
+  [PASS] modes_nist_compact  (1s)
+== randomized regression vs python golden model
+  [PASS] random_iterative  (10s)
+  [PASS] random_compact  (19s)
+  [PASS] random_pipe  (20s)
+  [PASS] random_modes  (6s)
+== cross-architecture equivalence + coverage
+  [PASS] equivalence  (39s)
+  [PASS] coverage  (19s)
+  forward S-box inputs (datapath)   : 256 / 256
+  inverse S-box inputs (datapath)   : 256 / 256
+  key-schedule S-box inputs         : 256 / 256
+  rounds x direction                : 20 / 20
+  Rcon steps                        : 10 / 10
+  FSM states                        : 5 / 5
+== performance (cycle counts)
+  [PASS] perf  (19s)
+PERF iterative enc_latency=23 dec_latency=23 cycles_per_block=23
+PERF compact   enc_latency=53 dec_latency=63 cycles_per_block=53
+PERF pipelined key_setup=11 latency=11 stream_1000_blocks_cycles=1011
+
+================ SUMMARY ================
+  unit_sbox                    PASS     0s
+  unit_shift_rows              PASS     0s
+  unit_mix_columns             PASS     1s
+  unit_key_expand              PASS     1s
+  nist_iterative               PASS     0s
+  nist_compact                 PASS     0s
+  modes_nist                   PASS     1s
+  modes_nist_compact           PASS     1s
+  random_iterative             PASS    10s
+  random_compact               PASS    19s
+  random_pipe                  PASS    20s
+  random_modes                 PASS     6s
+  equivalence                  PASS    39s
+  coverage                     PASS    19s
+  perf                         PASS    19s
+passed: 15   failed: 0

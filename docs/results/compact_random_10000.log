@@ -1,0 +1,3 @@
+Random regression: 10000 tests (4975 enc, 5025 dec), 0 mismatches
+ALL RANDOM TESTS PASSED
+tb/tb_arch_random.v:48: $finish called at 5902530000 (1ps)
