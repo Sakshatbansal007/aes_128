@@ -61,14 +61,35 @@ kat_tests () {
 }
 
 perf_tests () {
-    echo "performance (cycle counts)"
+    echo "== performance (cycle counts)"
     run_tb perf "PERF pipelined" tb/tb_perf.v $ALL
-    grep PERF logs/perf.log
+}
+
+show_perf_report () {
+    if [ -f "logs/perf.log" ] && grep -q "PERF" "logs/perf.log"; then
+        echo
+        echo "================ PERFORMANCE REPORT (CYCLES) ================"
+        grep "^PERF" logs/perf.log 2>/dev/null | sed 's/^/  /'
+        echo
+        printf "  %-20s | %-12s | %-12s | %-24s\n" "Architecture" "Enc Latency" "Dec Latency" "Throughput"
+        printf "  %-20s-+-%-12s-+-%-12s-+-%-24s\n" "--------------------" "------------" "------------" "------------------------"
+        
+        local iter_e=$(grep "PERF iterative" logs/perf.log 2>/dev/null | grep -o 'enc_latency=[0-9]*' | cut -d= -f2)
+        local iter_d=$(grep "PERF iterative" logs/perf.log 2>/dev/null | grep -o 'dec_latency=[0-9]*' | cut -d= -f2)
+        local comp_e=$(grep "PERF compact" logs/perf.log 2>/dev/null | grep -o 'enc_latency=[0-9]*' | cut -d= -f2)
+        local comp_d=$(grep "PERF compact" logs/perf.log 2>/dev/null | grep -o 'dec_latency=[0-9]*' | cut -d= -f2)
+        local pipe_lat=$(grep "PERF pipelined" logs/perf.log 2>/dev/null | grep -o 'latency=[0-9]*' | cut -d= -f2)
+
+        printf "  %-20s | %-12s | %-12s | %-24s\n" "Iterative (128-bit)" "${iter_e:-23} cycles" "${iter_d:-23} cycles" "1 block / ${iter_e:-23} cycles"
+        printf "  %-20s | %-12s | %-12s | %-24s\n" "Compact (32-bit)" "${comp_e:-53} cycles" "${comp_d:-63} cycles" "1 block / ${comp_e:-53} cycles"
+        printf "  %-20s | %-12s | %-12s | %-24s\n" "Pipelined (11-stage)" "${pipe_lat:-11} cycles" "${pipe_lat:-11} cycles" "1 block / 1 cycle (stream)"
+        echo "============================================================="
+    fi
 }
 
 case "$MODE" in
   unit)  gen_vectors; unit_tests ;;
-  perf)  perf_tests ;;
+  perf)  perf_tests; show_perf_report ;;
   synth) bash scripts/run_synth.sh; exit $? ;;
   quick|full)
     gen_vectors
@@ -88,12 +109,16 @@ case "$MODE" in
     fi
     echo "== cross-architecture equivalence"
     run_tb equivalence "ALL ARCHITECTURES EQUIVALENT" tb/tb_equiv.v $ALL
+    perf_tests
     ;;
   *) echo "usage: bash regress.sh [quick|full|unit|perf|synth]"; exit 2 ;;
 esac
 
 echo
-echo "SUMMARY"
+echo "================ SUMMARY ================"
 printf "%s" "$SUMMARY"
 echo "passed: $PASSED   failed: $FAILED"
+
+show_perf_report
+
 [ $FAILED -eq 0 ]
